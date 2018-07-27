@@ -1,2 +1,2 @@
-# TECH-BASE-mission4-1
-TECH-BASSより出されたミッション4-1の成果物です。
+# TECH-BASE-mission
+TECH-BASSより出されたミッションの成果物です。(まだアップしていません)
