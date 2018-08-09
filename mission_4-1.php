@@ -132,6 +132,6 @@ else if($_POST['num']!="0"){
 $sql = 'SELECT * FROM mission4_1';//データベース読みだし
 $results = $pdo -> query($sql);
 foreach($results as $row){//表示
-	echo $row['id']." ".$row['name']." ".$row['comment']." ".$row['time']."pass:".$row['password']."<br />";//文字を表示
+	echo $row['id']." ".$row['name']." ".$row['comment']." ".$row['time']."<br />";//文字を表示
 }
 ?>
