@@ -5,6 +5,7 @@ $dsn = 'mysql:dbname=データベース名;host=localhost';
 $user = 'ユーザー名';
 $password = 'パスワード';
 $pdo = new PDO($dsn,$user,$password,array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+
 ?>
 <html>
 <head>
@@ -31,6 +32,7 @@ if(!empty($_POST['hensyu'])&&$_POST['hensyu']!="編集する番号"){//編集前
 	$result = $stmt->fetch(PDO::FETCH_ASSOC);//配列として呼び出し
 	$stmt->closeCursor();
 	if($result['password']==$_POST['pass2']){//パスワード照合 内容セット
+		$hdata0=$result['id'];
 		$hdata1=$result['name'];
 		$hdata2=$result['comment'];
 		$hdata3=$result['password'];
@@ -39,8 +41,7 @@ if(!empty($_POST['hensyu'])&&$_POST['hensyu']!="編集する番号"){//編集前
 		echo "パスワードが違います！！<br />";
 	}
 	$frag = 1;//フラグ
-}
-else if(!empty($_POST['sakujo'])&&$_POST['sakujo']!="削除番号"){//削除
+}else if(!empty($_POST['sakujo'])&&$_POST['sakujo']!="削除番号"){//削除
 	$sql = "SELECT * FROM mission4_1 where id = :id";//データベース読みだし
 	$stmt = $pdo -> prepare($sql);
 	$stmt->bindParam(":id", $i, PDO::PARAM_INT);
@@ -68,16 +69,6 @@ else if(!empty($_POST['sakujo'])&&$_POST['sakujo']!="削除番号"){//削除
 		echo "パスワードが違います！！<br />";
 	}
 	$frag = 1;//フラグ
-}else{
-	$password = $_POST['pass1'];
-	$sql = 'SELECT * FROM mission4_1 where password = :password';//データベース読みだし
-	$stmt = $pdo -> prepare($sql);
-	$stmt->bindParam(":password", $password, PDO::PARAM_STR);
-	$stmt->execute();
-	$result = $stmt->fetch(PDO::FETCH_ASSOC);
-	if(!empty($result)){//パスワード照合 パスワード重複確認
-		$frag=2;//フラグ
-	}
 }
 ?>
 <form action="mission_4-1.php" method="post"><!--フォームの設定-->
@@ -85,7 +76,8 @@ else if(!empty($_POST['sakujo'])&&$_POST['sakujo']!="削除番号"){//削除
 <br />
 <input type="text" name="comment" value="<?php if(!empty($hdata2)){echo $hdata2;}else{echo "コメント";}?>"></label><!--文字入力フォーム-->
 <br />
-<input type="text" name="pass1" value="<?php if(!empty($hdata3)){echo "pass:".$hdata3;}else{echo "パスワード";}?>"></label><!--文字入力フォーム-->
+<input type="text" name="pass1" value="<?php if(!empty($hdata3)){echo $hdata3;}else{echo "パスワード";}?>"></label><!--文字入力フォーム-->
+<input type="hidden" name="num" value="<?php if(!empty($hdata0)){echo $hdata0;}else{echo "0";}?>">
 <input type="submit" value="送信"><!--送信フォーム-->
 <br /><br />
 <input type="text" name="hensyu" value="編集する番号"></label><!--編集入力フォーム-->
@@ -100,37 +92,42 @@ else if(!empty($_POST['sakujo'])&&$_POST['sakujo']!="削除番号"){//削除
 </body>
 <?php
 if($frag==1){}
-else if($frag==2){
-	echo "<br />すでにこのパスワードは使われています！！<br />";
-}else{
-	$pass = explode(":",$_POST['pass1']);//パスワード取りだし
-	if(count($pass)==2){//編集
-		$password =$pass[1]; 
+else if($_POST['num']!="0"){
+	$sql = "SELECT * FROM mission4_1 where id = :id";//データベース読みだし
+	$stmt = $pdo -> prepare($sql);
+	$stmt->bindParam(":id", $i, PDO::PARAM_INT);
+	$i=$_POST['num'];//編集先の配列番号を取得
+	$stmt->execute();
+	$result = $stmt->fetch(PDO::FETCH_ASSOC);
+	if($result['password']==$_POST['pass1']){//パスワード照合.編集
 		$name = $_POST['name'];
 		$comment = $_POST['comment'];
 		$time = date(":Y年m月d日 H時i分s秒");
-		$sql = "update mission4_1 set name='$name', comment='$comment', time = '$time' where password = :password";//編集
+		$id=$_POST['num'];
+		$sql = "update mission4_1 set name='$name', comment='$comment', time = '$time' where id = :id";//編集
 		$stmt = $pdo->prepare($sql);
-		$stmt->bindParam(":password", $password, PDO::PARAM_STR);
+		$stmt->bindParam(":id", $id, PDO::PARAM_INT);
 		$stmt->execute();
-	}else if(!empty($_POST['name'])&&!empty($_POST['comment'])){
-		$sql = 'SELECT * FROM mission4_1';//データベース読みだし
-		$results = $pdo -> query($sql);
-		$count=1;
-		foreach($results as $row){//カウント
-			++$count;
-		}
-		$sql = $pdo -> prepare("INSERT INTO mission4_1 (id,name, comment, time, password) VALUES ('$count',:name, :comment, :time, :password)");//新情報の獲得	
-		$sql -> bindParam(':name', $name, PDO::PARAM_STR);
-		$sql -> bindParam(':comment', $comment, PDO::PARAM_STR);
-		$sql -> bindParam(':time', $time, PDO::PARAM_STR);
-		$sql -> bindParam(':password', $password, PDO::PARAM_STR);
-		$name = $_POST['name'];
-		$comment = $_POST['comment']; 
-		$time = date(":Y年m月d日 H時i分s秒");
-		$password =$_POST['pass1']; 
-		$sql -> execute();
+	}else{
+		echo "パスワードが違います！！<br />";
 	}
+}else if(!empty($_POST['name'])&&!empty($_POST['comment'])){
+	$sql = 'SELECT * FROM mission4_1';//データベース読みだし
+	$results = $pdo -> query($sql);
+	$count=1;
+	foreach($results as $row){//カウント
+		++$count;
+	}
+	$sql = $pdo -> prepare("INSERT INTO mission4_1 (id,name, comment, time, password) VALUES ('$count',:name, :comment, :time, :password)");//新情報の獲得	
+	$sql -> bindParam(':name', $name, PDO::PARAM_STR);
+	$sql -> bindParam(':comment', $comment, PDO::PARAM_STR);
+	$sql -> bindParam(':time', $time, PDO::PARAM_STR);
+	$sql -> bindParam(':password', $password, PDO::PARAM_STR);
+	$name = $_POST['name'];
+	$comment = $_POST['comment']; 
+	$time = date(":Y年m月d日 H時i分s秒");
+	$password =$_POST['pass1']; 
+	$sql -> execute();
 }
 $sql = 'SELECT * FROM mission4_1';//データベース読みだし
 $results = $pdo -> query($sql);
